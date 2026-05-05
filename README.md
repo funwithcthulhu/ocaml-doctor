@@ -142,37 +142,6 @@ specific shell setup.
 - Improve opam switch environment explanations on Windows.
 - Add targeted diagnostics for common dune and LSP project-layout problems.
 
-## Release Checklist
+## Release Process
 
-```console
-# 1. Build and test.
-opam install . --deps-only --with-test
-dune build
-dune runtest
-opam lint
-
-# 2. Test local install.
-opam pin add ocaml-doctor . -y
-ocaml-doctor check
-ocaml-doctor version
-opam remove ocaml-doctor
-
-# 3. Commit.
-git status
-git add .
-git commit -m "Prepare 0.1.0 release"
-
-# 4. Tag.
-git tag -a 0.1.0 -m "Release 0.1.0"
-git push origin main
-git push origin 0.1.0
-
-# 5. Publish.
-opam install opam-publish
-opam publish
-
-# 6. After opam-repository PR is merged.
-opam update
-opam install ocaml-doctor
-ocaml-doctor check
-```
+Maintainer release steps are documented in [RELEASE.md](RELEASE.md).
