@@ -1,7 +1,6 @@
 # ocaml-doctor
 
 [![CI](https://github.com/funwithcthulhu/ocaml-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/funwithcthulhu/ocaml-doctor/actions/workflows/ci.yml)
-[![opam](https://img.shields.io/opam/v/ocaml-doctor.svg)](https://opam.ocaml.org/packages/ocaml-doctor/)
 [![license](https://img.shields.io/github/license/funwithcthulhu/ocaml-doctor.svg)](LICENSE)
 
 `ocaml-doctor` is a small diagnostic CLI for OCaml development environments.
