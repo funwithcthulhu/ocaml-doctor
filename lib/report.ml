@@ -20,17 +20,18 @@ let format_diagnostic diagnostic =
     Printf.sprintf "[%s] %s" status diagnostic.Check.title
   in
   let indent = indent_for status in
-  let extra =
-    (match diagnostic.detail with
+  let detail_lines =
+    match diagnostic.detail with
     | Some detail -> format_extra_lines indent ~prefix:"" detail
-    | None -> [])
-    @
+    | None -> []
+  in
+  let suggestion_lines =
     match diagnostic.suggestion with
     | Some suggestion ->
         format_extra_lines indent ~prefix:"Suggested fix: " suggestion
     | None -> []
   in
-  String.concat "\n" (first_line :: extra)
+  String.concat "\n" ((first_line :: detail_lines) @ suggestion_lines)
 
 let counts diagnostics =
   List.fold_left
@@ -74,16 +75,19 @@ let json_severity = function
   | Check.Warn -> "warn"
   | Check.Error -> "error"
 
+let json_field ?(comma = true) name value =
+  Printf.sprintf "      \"%s\": %s%s" name value
+    (if comma then "," else "")
+
 let render_json_diagnostic diagnostic =
   String.concat "\n"
     [
       "    {";
-      Printf.sprintf "      \"id\": %s," (json_string diagnostic.Check.id);
-      Printf.sprintf "      \"severity\": %s,"
-        (json_string (json_severity diagnostic.severity));
-      Printf.sprintf "      \"title\": %s," (json_string diagnostic.title);
-      Printf.sprintf "      \"detail\": %s," (json_option diagnostic.detail);
-      Printf.sprintf "      \"suggestion\": %s"
+      json_field "id" (json_string diagnostic.Check.id);
+      json_field "severity" (json_string (json_severity diagnostic.severity));
+      json_field "title" (json_string diagnostic.title);
+      json_field "detail" (json_option diagnostic.detail);
+      json_field ~comma:false "suggestion"
         (json_option diagnostic.suggestion);
       "    }";
     ]

@@ -1,8 +1,7 @@
-let diagnostic severity title =
-  Doctor.Check.make ~id:title ~title ~suggestion:"opam install ocamlformat"
-    severity
+let diagnostic ?detail ?suggestion severity title =
+  Doctor.Check.make ?detail ?suggestion ~id:title ~title severity
 
-let expect_equal label expected actual =
+let expect_int label expected actual =
   if expected <> actual then
     failwith
       (Printf.sprintf "%s: expected %d, got %d" label expected actual)
@@ -34,49 +33,62 @@ let expect_contains label needle haystack =
   if not (contains_substring haystack needle) then
     failwith (Printf.sprintf "%s: missing substring %S" label needle)
 
-let () =
-  let ok = diagnostic Doctor.Check.Ok "opam found: 2.2.1" in
-  let warn = diagnostic Doctor.Check.Warn "ocamlformat not installed" in
-  let error = diagnostic Doctor.Check.Error "opam switch not active" in
-  expect_equal "ok exit code" 0 (Doctor.Report.exit_code [ ok ]);
-  expect_equal "warning exit code" 1
-    (Doctor.Report.exit_code [ ok; warn ]);
-  expect_equal "error exit code" 2
+let ok = diagnostic Doctor.Check.Ok "opam found: 2.2.1"
+
+let warn =
+  diagnostic Doctor.Check.Warn "ocamlformat not installed"
+    ~suggestion:"opam install ocamlformat"
+
+let error = diagnostic Doctor.Check.Error "opam switch not active"
+
+let test_exit_codes_and_counts () =
+  expect_int "ok exit code" 0 (Doctor.Report.exit_code [ ok ]);
+  expect_int "warning exit code" 1 (Doctor.Report.exit_code [ ok; warn ]);
+  expect_int "error exit code" 2
     (Doctor.Report.exit_code [ ok; warn; error ]);
-  expect_equal "summary ok count" 1
+  expect_int "summary ok count" 1
     (let ok_count, _, _ = Doctor.Report.counts [ ok; warn; error ] in
-     ok_count);
+     ok_count)
+
+let test_text_report_includes_suggestions () =
   let rendered = Doctor.Report.render [ warn ] in
   expect_line "warning line" "[WARN] ocamlformat not installed" rendered;
   expect_line "suggestion line"
     "       Suggested fix: opam install ocamlformat" rendered;
-  expect_line "summary line" "Summary: 0 OK, 1 WARN, 0 ERROR" rendered;
-  let multiline =
-    Doctor.Check.make ~id:"multi" ~title:"multi-line detail"
+  expect_line "summary line" "Summary: 0 OK, 1 WARN, 0 ERROR" rendered
+
+let test_multiline_detail_and_suggestion_are_indented () =
+  let diagnostic =
+    diagnostic Doctor.Check.Warn "multi-line detail"
       ~detail:"first line\nsecond line" ~suggestion:"fix it\ntry again"
-      Doctor.Check.Warn
   in
-  let rendered = Doctor.Report.render [ multiline ] in
+  let rendered = Doctor.Report.render [ diagnostic ] in
   expect_line "multiline detail first" "       first line" rendered;
   expect_line "multiline detail second" "       second line" rendered;
   expect_line "multiline suggestion first" "       Suggested fix: fix it"
     rendered;
-  expect_line "multiline suggestion second" "       try again" rendered;
+  expect_line "multiline suggestion second" "       try again" rendered
+
+let test_json_report_contains_diagnostics_summary_and_exit_code () =
   let json = Doctor.Report.render_json [ ok; warn; error ] in
   expect_contains "json diagnostics" "\"diagnostics\": [" json;
   expect_contains "json severity" "\"severity\": \"warn\"" json;
   expect_contains "json summary"
     "\"summary\": { \"ok\": 1, \"warn\": 1, \"error\": 1 }" json;
-  expect_contains "json exit code" "\"exit_code\": 2" json;
-  let escaped =
-    Doctor.Check.make ~id:"escape" ~title:"quoted \"title\""
-      ~detail:"first line\nsecond line" Doctor.Check.Warn
+  expect_contains "json exit code" "\"exit_code\": 2" json
+
+let test_json_escapes_strings () =
+  let diagnostic =
+    diagnostic Doctor.Check.Warn "quoted \"title\""
+      ~detail:"first line\nsecond line"
   in
-  let json = Doctor.Report.render_json [ escaped ] in
+  let json = Doctor.Report.render_json [ diagnostic ] in
   expect_contains "json quotes" "\"title\": \"quoted \\\"title\\\"\"" json;
   expect_contains "json newline" "\"detail\": \"first line\\nsecond line\""
-    json;
-  let empty_json =
+    json
+
+let test_empty_json_report () =
+  let expected =
     String.concat "\n"
       [
         "{";
@@ -87,4 +99,16 @@ let () =
       ]
     ^ "\n"
   in
-  expect_string "empty json" empty_json (Doctor.Report.render_json [])
+  expect_string "empty json" expected (Doctor.Report.render_json [])
+
+let () =
+  List.iter
+    (fun test -> test ())
+    [
+      test_exit_codes_and_counts;
+      test_text_report_includes_suggestions;
+      test_multiline_detail_and_suggestion_are_indented;
+      test_json_report_contains_diagnostics_summary_and_exit_code;
+      test_json_escapes_strings;
+      test_empty_json_report;
+    ]
