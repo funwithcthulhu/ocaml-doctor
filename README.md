@@ -1,6 +1,7 @@
 # doctor
 
 [![CI](https://github.com/funwithcthulhu/doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/funwithcthulhu/doctor/actions/workflows/ci.yml)
+[![opam](https://badgen.net/opam/v/doctor)](https://opam.ocaml.org/packages/doctor/)
 [![license](https://img.shields.io/github/license/funwithcthulhu/doctor.svg)](LICENSE)
 
 `doctor` is a small diagnostic CLI for OCaml development environments.
