@@ -4,14 +4,12 @@
 [![opam](https://badgen.net/opam/v/doctor)](https://opam.ocaml.org/packages/doctor/)
 [![license](https://img.shields.io/github/license/funwithcthulhu/doctor.svg)](LICENSE)
 
-`doctor` checks a local OCaml development environment and reports common setup
-problems. It is read-only: it prints diagnostics and suggested commands, but it
-does not modify opam switches, shell files, or editor settings.
+`doctor` is a read-only CLI for checking whether a local OCaml development
+environment looks usable.
 
-It currently checks platform details, core tool versions, opam initialization
-state, active and available switches, whether the resolved `ocaml` appears to
-match the active switch, selected opam packages, and the VS Code OCaml Platform
-extension when `code` is available.
+It reports missing core tools, opam initialization and switch state, likely
+shell environment mismatches, selected opam packages, and the VS Code OCaml
+Platform extension when the `code` command is available.
 
 ## Installation
 
@@ -85,8 +83,7 @@ opam exec -- dune runtest
 opam exec -- dune exec doctor -- check
 ```
 
-Tests use injected process runners and deterministic fixtures. They do not
-require opam to be initialized on the host machine, and they do not require VS
-Code or a particular shell setup.
+Tests fake process execution, so they do not depend on the host opam setup, VS
+Code, or a particular shell.
 
 Maintainer release notes are in [RELEASE.md](RELEASE.md).

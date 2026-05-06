@@ -13,7 +13,8 @@
 (package
  (name doctor)
  (synopsis "Diagnostic CLI for OCaml development environments")
- (description "doctor checks common OCaml development environment problems, including opam setup, active switches, dune, ocaml-lsp-server, ocamlformat, PATH issues, and editor integration hints.")
+ (description
+  "doctor checks common OCaml development environment problems, including opam setup, active switches, dune, ocaml-lsp-server, ocamlformat, PATH issues, and editor integration hints.")
  (depends
   (ocaml (>= 5.1))
   (dune (>= 3.11))
