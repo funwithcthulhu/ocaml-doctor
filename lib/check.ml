@@ -24,14 +24,17 @@ let max_severity left right =
 
 let aggregate diagnostics =
   List.fold_left
-    (fun severity diagnostic -> max_severity severity diagnostic.severity)
+    (fun severity diagnostic ->
+      max_severity severity diagnostic.severity)
     Ok diagnostics
 
 let exit_code diagnostics =
   match aggregate diagnostics with Ok -> 0 | Warn -> 1 | Error -> 2
 
 let clean_output output =
-  output |> String.split_on_char '\n' |> List.map String.trim
+  output
+  |> String.split_on_char '\n'
+  |> List.map String.trim
   |> List.filter (fun line -> line <> "")
 
 let first_output_line (result : Process.result) =
@@ -87,8 +90,8 @@ let command_diagnostic ~(run : Process.runner) spec =
       make
         ~id:("command." ^ spec.command)
         ~title:(Printf.sprintf "%s command failed" spec.label)
-        ~detail:(Process.summary result) ~suggestion:spec.missing_suggestion
-        spec.missing_severity
+        ~detail:(Process.summary result)
+        ~suggestion:spec.missing_suggestion spec.missing_severity
 
 let lsp_command_diagnostic ~(run : Process.runner) =
   let primary = run "ocaml-lsp-server" [ "--version" ] in
@@ -113,24 +116,25 @@ let lsp_command_diagnostic ~(run : Process.runner) =
           make ~id:"command.ocaml-lsp-server"
             ~title:"OCaml LSP command not found"
             ~detail:
-              "Checked `ocaml-lsp-server` and `ocamllsp`; neither command is \
-               available on PATH."
+              "Checked `ocaml-lsp-server` and `ocamllsp`; neither \
+               command is available on PATH."
             ~suggestion:"opam install ocaml-lsp-server" Warn
       | _ ->
           make ~id:"command.ocaml-lsp-server"
             ~title:"OCaml LSP found, but its version could not be read"
             ~detail:(Process.summary fallback)
             ~suggestion:
-              "Try running `ocamllsp --version` directly, or reinstall it with \
-               opam."
+              "Try running `ocamllsp --version` directly, or reinstall \
+               it with opam."
             Warn)
   | _ ->
       make ~id:"command.ocaml-lsp-server"
-        ~title:"ocaml-lsp-server found, but its version could not be read"
+        ~title:
+          "ocaml-lsp-server found, but its version could not be read"
         ~detail:(Process.summary primary)
         ~suggestion:
-          "Try running `ocaml-lsp-server --version` directly, or reinstall it \
-           with opam."
+          "Try running `ocaml-lsp-server --version` directly, or \
+           reinstall it with opam."
         Warn
 
 let core_command_specs =
@@ -150,7 +154,8 @@ let core_command_specs =
       label = "OCaml";
       missing_severity = Error;
       missing_suggestion =
-        "Create or select an opam switch, then sync your shell environment.";
+        "Create or select an opam switch, then sync your shell \
+         environment.";
       version_parser = parse_ocaml_version;
     };
     {
@@ -175,4 +180,7 @@ let ocamlformat_spec =
 
 let command_diagnostics ~run =
   List.map (command_diagnostic ~run) core_command_specs
-  @ [ lsp_command_diagnostic ~run; command_diagnostic ~run ocamlformat_spec ]
+  @ [
+      lsp_command_diagnostic ~run;
+      command_diagnostic ~run ocamlformat_spec;
+    ]

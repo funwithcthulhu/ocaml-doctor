@@ -1,18 +1,23 @@
 let indent_for status = String.make (String.length status + 3) ' '
 
 let non_empty_lines text =
-  text |> String.split_on_char '\n' |> List.map String.trim
+  text
+  |> String.split_on_char '\n'
+  |> List.map String.trim
   |> List.filter (fun line -> line <> "")
 
 let format_extra_lines indent ~prefix text =
   match non_empty_lines text with
   | [] -> []
   | first :: rest ->
-      (indent ^ prefix ^ first) :: List.map (fun line -> indent ^ line) rest
+      (indent ^ prefix ^ first)
+      :: List.map (fun line -> indent ^ line) rest
 
 let format_diagnostic diagnostic =
   let status = Check.severity_to_string diagnostic.Check.severity in
-  let first_line = Printf.sprintf "[%s] %s" status diagnostic.Check.title in
+  let first_line =
+    Printf.sprintf "[%s] %s" status diagnostic.Check.title
+  in
   let indent = indent_for status in
   let detail_lines =
     match diagnostic.detail with
@@ -52,13 +57,17 @@ let json_escape text =
       | '\r' -> Buffer.add_string buffer "\\r"
       | '\t' -> Buffer.add_string buffer "\\t"
       | char when Char.code char < 0x20 ->
-          Buffer.add_string buffer (Printf.sprintf "\\u%04x" (Char.code char))
+          Buffer.add_string buffer
+            (Printf.sprintf "\\u%04x" (Char.code char))
       | char -> Buffer.add_char buffer char)
     text;
   Buffer.contents buffer
 
 let json_string text = Printf.sprintf "\"%s\"" (json_escape text)
-let json_option = function Some value -> json_string value | None -> "null"
+
+let json_option = function
+  | Some value -> json_string value
+  | None -> "null"
 
 let json_severity = function
   | Check.Ok -> "ok"
@@ -67,7 +76,8 @@ let json_severity = function
 
 let render_json_diagnostic diagnostic =
   let field ?(comma = true) name value =
-    Printf.sprintf "      \"%s\": %s%s" name value (if comma then "," else "")
+    Printf.sprintf "      \"%s\": %s%s" name value
+      (if comma then "," else "")
   in
   String.concat "\n"
     [
@@ -76,14 +86,17 @@ let render_json_diagnostic diagnostic =
       field "severity" (json_string (json_severity diagnostic.severity));
       field "title" (json_string diagnostic.title);
       field "detail" (json_option diagnostic.detail);
-      field ~comma:false "suggestion" (json_option diagnostic.suggestion);
+      field ~comma:false "suggestion"
+        (json_option diagnostic.suggestion);
       "    }";
     ]
 
 let render_json diagnostics =
   let ok, warn, error = counts diagnostics in
   let diagnostic_lines =
-    diagnostics |> List.map render_json_diagnostic |> String.concat ",\n"
+    diagnostics
+    |> List.map render_json_diagnostic
+    |> String.concat ",\n"
   in
   let diagnostics_json =
     match diagnostic_lines with
@@ -95,8 +108,8 @@ let render_json diagnostics =
       "{";
       Printf.sprintf "  \"diagnostics\": %s," diagnostics_json;
       Printf.sprintf
-        "  \"summary\": { \"ok\": %d, \"warn\": %d, \"error\": %d }," ok warn
-        error;
+        "  \"summary\": { \"ok\": %d, \"warn\": %d, \"error\": %d }," ok
+        warn error;
       Printf.sprintf "  \"exit_code\": %d" (Check.exit_code diagnostics);
       "}";
     ]
@@ -108,7 +121,8 @@ let render diagnostics =
     | [] -> "No diagnostics."
     | _ ->
         (diagnostics |> List.map format_diagnostic |> String.concat "\n")
-        ^ "\n\n" ^ format_summary diagnostics
+        ^ "\n\n"
+        ^ format_summary diagnostics
   in
   "OCaml Doctor\n\n" ^ body ^ "\n"
 

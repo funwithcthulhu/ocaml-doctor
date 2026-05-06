@@ -3,15 +3,19 @@ let diagnostic ?detail ?suggestion severity title =
 
 let expect_int label expected actual =
   if expected <> actual then
-    failwith (Printf.sprintf "%s: expected %d, got %d" label expected actual)
+    failwith
+      (Printf.sprintf "%s: expected %d, got %d" label expected actual)
 
 let expect_string label expected actual =
   if not (String.equal expected actual) then
-    failwith (Printf.sprintf "%s: expected %S, got %S" label expected actual)
+    failwith
+      (Printf.sprintf "%s: expected %S, got %S" label expected actual)
 
 let expect_line label needle haystack =
   if
-    not (List.exists (String.equal needle) (String.split_on_char '\n' haystack))
+    not
+      (List.exists (String.equal needle)
+         (String.split_on_char '\n' haystack))
   then failwith (Printf.sprintf "%s: missing line %S" label needle)
 
 let contains_substring haystack needle =
@@ -20,7 +24,8 @@ let contains_substring haystack needle =
   let rec loop index =
     needle_length = 0
     || index + needle_length <= haystack_length
-       && (String.sub haystack index needle_length = needle || loop (index + 1))
+       && (String.sub haystack index needle_length = needle
+          || loop (index + 1))
   in
   loop 0
 
@@ -38,8 +43,10 @@ let error = diagnostic Doctor.Check.Error "opam switch not active"
 
 let test_exit_codes_and_counts () =
   expect_int "ok exit code" 0 (Doctor.Report.exit_code [ ok ]);
-  expect_int "warning exit code" 1 (Doctor.Report.exit_code [ ok; warn ]);
-  expect_int "error exit code" 2 (Doctor.Report.exit_code [ ok; warn; error ]);
+  expect_int "warning exit code" 1
+    (Doctor.Report.exit_code [ ok; warn ]);
+  expect_int "error exit code" 2
+    (Doctor.Report.exit_code [ ok; warn; error ]);
   expect_int "summary ok count" 1
     (let ok_count, _, _ = Doctor.Report.counts [ ok; warn; error ] in
      ok_count)
@@ -47,8 +54,8 @@ let test_exit_codes_and_counts () =
 let test_text_report_includes_suggestions () =
   let rendered = Doctor.Report.render [ warn ] in
   expect_line "warning line" "[WARN] ocamlformat not installed" rendered;
-  expect_line "suggestion line" "       Suggested fix: opam install ocamlformat"
-    rendered;
+  expect_line "suggestion line"
+    "       Suggested fix: opam install ocamlformat" rendered;
   expect_line "summary line" "Summary: 0 OK, 1 WARN, 0 ERROR" rendered
 
 let test_multiline_detail_and_suggestion_are_indented () =
@@ -59,8 +66,8 @@ let test_multiline_detail_and_suggestion_are_indented () =
   let rendered = Doctor.Report.render [ diagnostic ] in
   expect_line "multiline detail first" "       first line" rendered;
   expect_line "multiline detail second" "       second line" rendered;
-  expect_line "multiline suggestion first" "       Suggested fix: fix it"
-    rendered;
+  expect_line "multiline suggestion first"
+    "       Suggested fix: fix it" rendered;
   expect_line "multiline suggestion second" "       try again" rendered
 
 let test_json_report_contains_diagnostics_summary_and_exit_code () =
@@ -77,8 +84,10 @@ let test_json_escapes_strings () =
       ~detail:"first line\nsecond line"
   in
   let json = Doctor.Report.render_json [ diagnostic ] in
-  expect_contains "json quotes" "\"title\": \"quoted \\\"title\\\"\"" json;
-  expect_contains "json newline" "\"detail\": \"first line\\nsecond line\"" json
+  expect_contains "json quotes" "\"title\": \"quoted \\\"title\\\"\""
+    json;
+  expect_contains "json newline"
+    "\"detail\": \"first line\\nsecond line\"" json
 
 let test_empty_json_report () =
   let expected =

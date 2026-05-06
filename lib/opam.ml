@@ -1,5 +1,7 @@
 let non_empty_lines output =
-  output |> String.split_on_char '\n' |> List.map String.trim
+  output
+  |> String.split_on_char '\n'
+  |> List.map String.trim
   |> List.filter (fun line -> line <> "")
 
 let first_stdout_line result =
@@ -15,7 +17,8 @@ let parse_active_switch output =
   | [] -> None
   | line :: _ ->
       let lower = String.lowercase_ascii line in
-      if String.starts_with ~prefix:"[error]" lower then None else Some line
+      if String.starts_with ~prefix:"[error]" lower then None
+      else Some line
 
 let trim_switch_marker line =
   let line = String.trim line in
@@ -41,7 +44,8 @@ let parse_installed_packages output =
   |> List.map (fun line ->
       match words line with package :: _ -> package | [] -> line)
 
-let has_package packages package = List.exists (String.equal package) packages
+let has_package packages package =
+  List.exists (String.equal package) packages
 
 let opam_available ~(run : Process.runner) =
   match (run "opam" [ "--version" ]).status with
@@ -63,12 +67,15 @@ let initialized_diagnostic ~(run : Process.runner) =
             ~detail:(Printf.sprintf "Root: %s" root)
             Check.Ok
       | None ->
-          Check.make ~id:"opam.initialized" ~title:"opam root could not be read"
-            ~detail:(Process.summary result) ~suggestion:"opam init" Check.Warn)
+          Check.make ~id:"opam.initialized"
+            ~title:"opam root could not be read"
+            ~detail:(Process.summary result)
+            ~suggestion:"opam init" Check.Warn)
   | _ ->
       Check.make ~id:"opam.initialized"
         ~title:"opam does not appear initialized"
-        ~detail:(Process.summary result) ~suggestion:"opam init" Check.Warn
+        ~detail:(Process.summary result)
+        ~suggestion:"opam init" Check.Warn
 
 let switch_diagnostics ~(run : Process.runner) os =
   let show = run "opam" [ "switch"; "show" ] in
@@ -88,13 +95,15 @@ let switch_diagnostics ~(run : Process.runner) os =
               Check.Ok
         | None ->
             let suggestion = switch_suggestion os switch_list in
-            Check.make ~id:"opam.switch.active" ~title:"opam switch not active"
-              ~detail:"opam did not report an active switch." ~suggestion
-              Check.Error)
+            Check.make ~id:"opam.switch.active"
+              ~title:"opam switch not active"
+              ~detail:"opam did not report an active switch."
+              ~suggestion Check.Error)
     | _ ->
         let suggestion = switch_suggestion os switch_list in
-        Check.make ~id:"opam.switch.active" ~title:"opam switch not active"
-          ~detail:(Process.summary show) ~suggestion Check.Error
+        Check.make ~id:"opam.switch.active"
+          ~title:"opam switch not active" ~detail:(Process.summary show)
+          ~suggestion Check.Error
   in
   let list_diagnostic =
     match switches.status with
@@ -109,7 +118,8 @@ let switch_diagnostics ~(run : Process.runner) os =
           ~title:(Printf.sprintf "opam switches available: %d" count)
           ?detail Check.Ok
     | _ ->
-        Check.make ~id:"opam.switch.list" ~title:"could not list opam switches"
+        Check.make ~id:"opam.switch.list"
+          ~title:"could not list opam switches"
           ~detail:(Process.summary switches)
           ~suggestion:"Run `opam switch list` to inspect your switches."
           Check.Warn
@@ -139,8 +149,9 @@ let switch_bin_diagnostic ~(run : Process.runner) os =
               ~title:"shell environment may be out of sync with opam"
               ~detail:
                 (Printf.sprintf
-                   "ocaml resolves to %s, but the active switch bin is %s." path
-                   switch_bin)
+                   "ocaml resolves to %s, but the active switch bin is \
+                    %s."
+                   path switch_bin)
               ~suggestion:(Platform.environment_sync_suggestion os)
               Check.Warn;
           ]
@@ -154,7 +165,8 @@ let package_diagnostic packages package ~optional =
       Check.Ok
   else
     let title =
-      if optional then Printf.sprintf "%s not installed (optional)" package
+      if optional then
+        Printf.sprintf "%s not installed (optional)" package
       else Printf.sprintf "%s not installed" package
     in
     Check.make
@@ -179,7 +191,8 @@ let package_diagnostics ~(run : Process.runner) =
         Check.make ~id:"opam.packages"
           ~title:"could not read installed opam packages"
           ~detail:(Process.summary result)
-          ~suggestion:"Run `opam list --installed --short` to inspect packages."
+          ~suggestion:
+            "Run `opam list --installed --short` to inspect packages."
           Check.Warn;
       ]
 
@@ -193,6 +206,7 @@ let diagnostics ~(run : Process.runner) os =
     [
       Check.make ~id:"opam.initialized"
         ~title:"opam checks skipped because opam is missing"
-        ~suggestion:"Install opam from https://opam.ocaml.org/doc/Install.html"
+        ~suggestion:
+          "Install opam from https://opam.ocaml.org/doc/Install.html"
         Check.Error;
     ]

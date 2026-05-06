@@ -105,7 +105,7 @@ opam exec -- dune runtest
 opam exec -- dune exec doctor -- check
 ```
 
-Tests fake process execution, so they do not depend on the host opam setup, VS
-Code, or a particular shell.
+Tests fake process execution, so they do not depend on the host opam setup, VS Code,
+or a particular shell.
 
 Maintainer release notes are in [RELEASE.md](RELEASE.md).
